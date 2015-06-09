@@ -237,7 +237,7 @@ namespace :sidekiq do
     args.push "--logfile #{fetch(:sidekiq_log)}" if fetch(:sidekiq_log)
     args.push "--require #{fetch(:sidekiq_require)}" if fetch(:sidekiq_require)
     args.push "--tag #{fetch(:sidekiq_tag)}" if fetch(:sidekiq_tag)
-    Array(fetch(:sidekiq_queue)).each do |queue|
+    Array(queue_for_host).each do |queue|
       args.push "--queue #{queue}"
     end
     args.push "--config #{fetch(:sidekiq_config)}" if fetch(:sidekiq_config)
@@ -256,6 +256,11 @@ namespace :sidekiq do
     end
 
     execute :sidekiq, args.compact.join(' ')
+  end
+
+  def queue_for_host
+    sidekiq_roles = host.roles & fetch(:sidekiq_roles)
+    fetch(:"#{ sidekiq_roles.first }_queue") || fetch(:sidekiq_queue)
   end
 
   def switch_user(role)
