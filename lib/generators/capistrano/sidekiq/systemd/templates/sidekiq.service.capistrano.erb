@@ -6,7 +6,11 @@ After=syslog.target network.target
 Type=simple
 Environment=RAILS_ENV=<%= fetch(:rails_env) %>
 WorkingDirectory=<%= fetch(:deploy_to) %>/current
-ExecStart=<%= fetch(:bundler_path, '/usr/local/bin/bundler') %> exec sidekiq -e <%= fetch(:rails_env) %>
+<%
+  sidekiq_roles = host.roles & fetch(:sidekiq_roles)
+  queue_for_host = fetch(:"#{ sidekiq_roles.first }_queue") || fetch(:sidekiq_queue)
+%>
+ExecStart=<%= fetch(:bundler_path, '/usr/local/bin/bundler') %> exec sidekiq -e <%= fetch(:rails_env) %> --queue <%= queue_for_host %>
 ExecReload=/bin/kill -TSTP $MAINPID
 ExecStop=/bin/kill -TERM $MAINPID
 
